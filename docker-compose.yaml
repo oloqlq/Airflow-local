@@ -313,11 +313,4 @@ volumes:
   postgres-db-volume:
   #mysql용 볼륨 -> 도커 엔진 내부에 공간 할당
   mysql-db-volume:
-  
-
-
-
-
-volumes:
-  postgres-db-volume:
 
