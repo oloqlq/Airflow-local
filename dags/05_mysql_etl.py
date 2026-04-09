@@ -42,7 +42,14 @@ def _extract(**kwargs):
     file_path = f'{DATA_PATH}/sensor_data_{ kwargs['ds_nodash'] }.json'
     with open(file_path, 'w') as f:
         json.dump(data, f)
+
+
+    # xCom을 통해서 task_trasnform에게 전달. 로그의 경로를 전달하는 것, 실제 데이터를 전달하는 것은 지양한다.
+    logging.info(f'추출된 로그 데이터 { file_path} ')
+    return file_path
     pass
+
+
 
 
 
@@ -50,7 +57,15 @@ def _trasform(**kwargs):
     # _extract에서 추출한 데이터를 XCom을 통해서 획득
     # 이 데이터를 df(pandas 사용, 소량데이터)로 로드 -> 섭씨를 화씨로 일괄 처리(1번에 n개의 센서에서 데이터가 전달)
     # 전처리된 내용은 csv로 덤프 (s3로 업로드 고려)
+    # 1. XCom을 통해 전달된 데이터를 획득해온다.
+    ti = kwargs['ti']
+    json_file_path = ti.xcom_pull(task_ids='extract')
+
+    logging.info(f'전달받은 데이터 {json_file_path}')
     pass
+
+
+
 def _load(**kwargs):
     # csv => df => mysql 적제
     pass
