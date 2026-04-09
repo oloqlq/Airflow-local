@@ -8,6 +8,8 @@ from airflow.operators.python import PythonOperator
 import logging
 # 추가분
 #from airflow.providers.mysql.operators.mysql import MysqlOperator
+# 범용 SQL Operator로 대체
+from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator
 # Load 처리시 sql에 전처리된 데이터를 밀어 넣을때 사용
 from airflow.providers.mysql.hooks.mysql import MySqlHook
 # 데이터
@@ -102,28 +104,27 @@ with DAG(
     catchup     = False,
     tags        = ['mysql', 'etl'],
 ) as dag:
-    # 4. task 정의
-    # task_create_table = MysqlOperator(
-    #     # 테이블 생성, if not exists를 사용하여 무조건 sql이 일단 수행되게 구성 
-    #     # -> 아니라면 fail 발생함(2회차부터)
-    #     # 최초는 생성, 존재하면 pass => if not exists
-    #     task_id = "create_table",
-    #     # 연결정보
-    #     mysql_conn_id = "mysql_default", # 대시보드에 admin>connectinos>하위에 사전 등록
-    #     # sql
-    #     sql = '''
-    #         CREATE TABLE IF NOT EXISTS sensor_readings (
-    #             id INT AUTO_INCREMENT PRIMARY KEY,
-    #             sensor_id VARCHAR(50),
-    #             timestamp DATETIME,
-    #             temperature_c FLOAT,
-    #             temperature_f FLOAT,
-    #             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    #         );
-    #     '''
-    # )
-    
-    task_extract    = PythonOperator(
+     # 4. task 정의
+    task_create_table = SQLExecuteQueryOperator(
+        # 테이블 생성, if not exists를 사용하여 무조건 sql이 일단 수행되게 구성 
+        # -> 아니라면 fail 발생함(2회차부터)
+        # 최초는 생성, 존재하면 pass => if not exists
+        task_id = "create_table",
+        # 연결정보
+        conn_id = "mysql_default", # 대시보드에 admin>connectinos>하위에 사전 등록
+        # sql
+        sql = '''
+            CREATE TABLE IF NOT EXISTS sensor_readings (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                sensor_id VARCHAR(50),
+                timestamp DATETIME,
+                temperature_c FLOAT,
+                temperature_f FLOAT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        '''
+    )
+    task_extract = PythonOperator(
         task_id = "extract",
         python_callable = _extract
     )
@@ -138,4 +139,4 @@ with DAG(
 
     # 5. 의존성 정의 -> 시나리오별 준비 
     # task_create_table >> task_extract >> task_trasform >> task_load
-    task_extract >> task_trasform >> task_load
+    task_create_table >> task_extract >> task_trasform >> task_load
