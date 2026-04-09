@@ -6,8 +6,13 @@ https://github.com/edu-kenshi/airflow-local
         - IDE에서 컨테이너로 접속해서 개발
         - 호스트PC에서 가상환경 등 구성하여 필요한 패키지 설치
             '''
+                # vscode에서 airflow 인식
                 pip install apache-airflow==2.11.2
+                
+                # airflow에서 mysql 인식
+                pip install apache-airflow-providers-mysql
             '''
+
 
 
 
