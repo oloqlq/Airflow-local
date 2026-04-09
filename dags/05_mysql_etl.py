@@ -81,31 +81,36 @@ def _trasform(**kwargs):
 #                        LOAD                       #
 #####################################################
 
+# Workflow : .csv를 DataFrame으로 변환하여 MySQL로 적재
+# 1. .csv 경로 획득
+# 2. DataFrame 변환
+# 3. MySQL 연결 : MySqlHook
+# 4. 커서 획득
+    # 4-1. insert 구문 사용
+        #sql = ""
+        #params = []
+        #cursor.executemany( sql, params )
+        # 4-2. 커밋
+        #conn.commit()
+# 5. 연결 종료
+# 7. 전체를 try ~ except로 감싸기(I/O)
 
 def _load(**kwargs):
-    # csv => df => mysql 적제
-    # 1. csv 경로 획득
-
-    # 2. csv -> df
-
-    # 3. mysql 연결 => MySqlHook 사용
+    # 1~3
     mysql_hook = MySqlHook(mysql_conn_id='mysql_default')
     conn       = mysql_hook.get_conn() # 커넥션 획득
-    # 7. 전체를 try ~ except로 감싸기(I/O)
+    # 7
     try:
-        # 4. 커서를 획득하여 
-        with conn.cursor() as cursor:        
-            # 4-1. insert 구문 사용
-            #sql = ""
-            #params = []
-            #cursor.executemany( sql, params )
-            # 4-2. 커밋
-            #conn.commit()
+        # 4
+        with conn.cursor() as cursor:    
+            # 4-1
+            # 4-2    
+ 
             pass        
     except Exception as e:
         pass
     finally:
-        # 5. 연결 종료
+        # 5
         if conn:
             conn.close()
     
