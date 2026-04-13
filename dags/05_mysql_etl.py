@@ -94,7 +94,7 @@ def _trasform(**kwargs):
 
 def _load(**kwargs):
     ti = kwargs['ti']
-    csv_path = ti.xcom_pull(task_ids='transform')
+    csv_path = ti.xcom_pull(task_ids='trasform')
     df = pd.read_csv(csv_path)
 
     mysql_hook = MySqlHook(mysql_conn_id='mysql_default')
@@ -109,7 +109,7 @@ def _load(**kwargs):
             '''
             params = [
                 ( data['sensor_id'], data['timestamp'],
-                  data['temperature_c'], data['temperature_f'] )
+                  data['temperature'], data['temperature_f'] )
                 for _, data in df.iterrows()
             ]
             logging.info(f'입력할 데이터(파라미터) {params}')
@@ -119,7 +119,7 @@ def _load(**kwargs):
             logging.info('mysql에 적재 완료')
             pass        
     except Exception as e:
-        logging.info(f'적재 오류: {e}')
+        logging.info(f'적재 오류: {e}') # 예외 던지기로 변경 필요
         pass
     finally:
         # 5
