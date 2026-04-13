@@ -27,23 +27,23 @@ os.makedirs(DATA_PATH, exist_ok=True)
 
 
 def _transform(**kwargs):
-    dag_run = kwargs['ti']
+    dag_run = kwargs['dag_run']
     json_file_path = dag_run.conf.get('json_path')
-
     logging.info(f'전달받은 데이터 {json_file_path}')
+
     df = pd.read_json( json_file_path )
     target_df = df[ df['temperature'] < 100 ].copy()    
     target_df['temperature_f'] = (target_df['temperature'] * 9/5) + 32
     file_path = f'{DATA_PATH}/preprocessing_data_{ kwargs['ds_nodash'] }.csv'
-    target_df.to_csv( file_path, index=False ) # 인덱스 제외
-    logging.info(f'전처리후 csv 저장 완료 {file_path}')
+    target_df.to_csv( file_path, index=False ) 
+    logging.info(f'전처리후 csv 저장 완료 {file_path}') 
+
     return file_path
 
 
 #####################################################
 #                     DAG Define                    #
 #####################################################
-
 
 with DAG(
     dag_id      = "06_multi_dag_2step_transform", 
@@ -60,16 +60,17 @@ with DAG(
 ) as dag:
     task_transform   = PythonOperator(
         task_id = "transform",
-        python_callable = _transform
+        python_callable = _trasform
     )
+
     task_trigger_load_dag_run = TriggerDagRunOperator(
         task_id = "trigger_load",
         trigger_dag_id = "06_multi_dag_3step_load",
-        conf ={
-            "csv_path":"{{ task_instance.xcom_pull(task_ids='extract') }}"
+        conf    = {
+            "csv_path":"{{ task_instance.xcom_pull(task_ids='transform') }}"
         },
-        reset_dag_run = True,
-        wait_for_completion = False
+        reset_dag_run= True,
+        wait_for_completion = False 
     )
 
 #####################################################

@@ -2,7 +2,6 @@
 #                     패키지 호출                      #
 #####################################################
 
-
 from datetime import datetime, timedelta
 from airflow import DAG
 from airflow.operators.python import PythonOperator
@@ -17,7 +16,6 @@ import os
 DATA_PATH = '/opt/airflow/dags/data'
 os.makedirs(DATA_PATH, exist_ok=True)
 
-
 #####################################################
 #                        LOAD                       #
 #####################################################
@@ -29,13 +27,12 @@ os.makedirs(DATA_PATH, exist_ok=True)
 
 
 def _load(**kwargs):
-    dag_run = kwargs['ti']
+    dag_run = kwargs['dag_run']
     csv_path = dag_run.conf.get('csv_path')
 
     df = pd.read_csv(csv_path)
-    
     mysql_hook = MySqlHook(mysql_conn_id='mysql_default')
-    conn       = mysql_hook.get_conn()
+    conn       = mysql_hook.get_conn() 
     try:
         with conn.cursor() as cursor:        
             sql = '''
@@ -46,7 +43,7 @@ def _load(**kwargs):
             params = [
                 ( data['sensor_id'],     data['timestamp'], 
                   data['temperature'], data['temperature_f'] )
-                for _, data in df.iterrows()
+                for _, data in df.iterrows() 
             ]
             logging.info(f'입력할 데이터(파라미터) {params}')
             cursor.executemany( sql, params )
@@ -54,7 +51,7 @@ def _load(**kwargs):
             logging.info('mysql에 적제 완료')
             pass        
     except Exception as e:
-        logging.info(f'적제 오류 : {e}')
+        logging.info(f'적제 오류 : {e}') 
         pass
     finally:
         if conn:
@@ -83,7 +80,28 @@ with DAG(
     catchup     = False,
     tags        = ['load', 'etl'],
 ) as dag:
+    task_create_table = SQLExecuteQueryOperator(
+        task_id = "create_table",
+        conn_id = "mysql_default", 
+        sql = '''
+            CREATE TABLE IF NOT EXISTS sensor_readings (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                sensor_id VARCHAR(50),
+                timestamp DATETIME,
+                temperature_c FLOAT,
+                temperature_f FLOAT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        '''
+    )
+    
     task_load       = PythonOperator(
         task_id = "load",
         python_callable = _load
     )
+
+
+#####################################################
+#                      의존성 정의                     #
+#####################################################
+    task_create_table >> task_load
