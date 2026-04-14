@@ -11,8 +11,8 @@ import json
 import requests
 
 # 2. API 서버 주소
-API_URL = "http://127.0.0.1:8000/predict"
-
+#API_URL = "http://127.0.0.1:8000/predict"
+API_URL = "http://ai-api-server:8000/predict"
 
 # 4-4. 콜백함수 정의
 def _create_dummy_data(**kwargs):
@@ -26,7 +26,7 @@ def _create_dummy_data(**kwargs):
 def _api_service_call(**kwargs):
     ti          = kwargs['ti']
     users_data  = ti.xcom_pull(task_ids='task_create_dummy_data')
-
+    logging.info(f'요청시 전달 데이터 {users_data}')
     try:
         res = requests.post(API_URL, json=users_data)
         #if res.raise_for_status() == 200
@@ -47,7 +47,7 @@ def _load_users_credit(**kwargs):
 # 3. DAG 정의
 with DAG(
     dag_id          = "07_msa_api_server_used",
-    description     = "msa 상 특정 서비스를 호출하고 수행하는 스케줄링."
+    description     = "msa 상 특정 서비스를 호출하고 수행하는 스케줄링.",
     default_args    = {
         'owner'         : 'de_2team_manager',
         'retries'       : 1,
