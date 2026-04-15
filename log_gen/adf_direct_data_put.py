@@ -29,3 +29,27 @@ def get_client(service_name='firehose', is_in_aws=True):
 
 firehose = get_client()
 print( firehose )
+
+
+
+# 4. 로그 생성 및 ADF 발송
+from run import make_one_log
+
+# 5.로그 1개 생성 -> adf 발송 함수
+def send_log():
+    # 5-1. 로그 1개 생성
+    response = firehose.put_record(
+        DeliveryStreamName = 'de-ai-14-an1-kdf-log-to-s3',
+        Record = {
+            'Data' : make_one_log() + "\n"
+        }
+    )
+    print(f'전송결과 : {response}')
+    pass
+
+
+
+
+# 6. 10번 로그 생성 발송
+for i in range(10):
+    send_log()
