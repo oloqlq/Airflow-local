@@ -24,14 +24,12 @@ print( ACCESS_KEY, SECRET_KEY, os.getenv("AIRFLOW_UID") )
 # 3. 클라이언트 생성
 def get_client( service_name='firehose', is_in_aws=True ):
     if not is_in_aws:
-        # AWS 외부에서 진행
         session   = boto3.Session(
             aws_access_key_id     = ACCESS_KEY,
             aws_secret_access_key = SECRET_KEY,
             region_name           = REGION
         )
         return session.client(service_name)    
-    # AWS 내부에서 진행
     return boto3.client(service_name, region_name = REGION)
 
 kinesis = get_client('kinesis', False)
@@ -53,14 +51,12 @@ def gen_stock_data():
 print('stock 거래 데이터 전송 시작...')
 try:
     while True:
-        # 데이터 생성
         data = gen_stock_data()
         print( f"전송전: {data}")
-        # kinesis 전달
         kinesis.put_record(
-            StreamName = "de-ai-14-an1-kds-stock-analysis",
+            StreamName = "de-ai-14-an1-kds-stock-input",
             Data = json.dumps( data ),
-            PartitionKey = data['ticker'] # 해당 컬럼의 고유값의 개수만큼 조각(샤드, 전용 차선)구성
+            PartitionKey = data['ticker']
         )
         print( f"전송: {data}")
         time.sleep(0.5)
