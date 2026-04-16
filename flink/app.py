@@ -1,5 +1,3 @@
-
-
 '''
 - pip install apache-flink==1.15.0
 - 요구사항 => raw data에서 티커별로 평균가격 10초 기준 추출 => 다음 kinesis로 전달
@@ -7,6 +5,13 @@
 - 표준 SQL + AWS + Flink 특징점 추가됨 형태
 - flink 를 이용하면 데이터를 배치|스트리밍 등 어떤 방식이던 분석에 적합한 데이터 형태로 가공할수 있음
 - 자바|스칼라|파이선 + SQL 결합하여 처리 가능함
+
+- 원본데이터 -> KDS(input) -> Flink stock_input table -> Flink 연산/전송 
+        -> Flink stock_output table -> KDS(output) -> firehose -> s3(가공된 데이터)
+  
+  or (소규모라면 lambda 사용)
+
+- 원본데이터 -> KDS(input) -> lambda service(서버리스) -> KDS(output) -> firehose -> s3(가공된 데이터)
 '''
 import os
 from pyflink.table import EnvironmentSettings, TableEnvironment
@@ -42,8 +47,8 @@ def main():
             WATERMARK FOR event_time AS event_time - INTERVAL '5' SECOND
         ) with (
             "connector" = "kinesis",
-            "stream"    = "de-ai-30-an2-kds-stock-input",
-            "aws.region"= "ap-northeast-2",
+            "stream"    = "de-ai-14-an1-kds-stock-input",
+            "aws.region"= "ap-northeast-1",
             "scan.stream.initpos" = "LATEST",
             "format"    = "json"
         )
@@ -53,12 +58,30 @@ def main():
     #    티커, 평균가격, 생성시간
     #    출력데이터에 대한 테이블에 kds가 연결되어 있어야함
     t_env.execute_sql('''
-        create table stock_input () with ()
+        create table stock_output (
+            ticker STRING,
+            avg_price DOUBLE,
+            avg_time TIMESTAMP(3)
+        ) with (
+            "connector" = "kinesis",
+            "stream"    = "de-ai-14-an1-kds-stock-output",
+            "aws.region"= "ap-northeast-1",            
+            "format"    = "json"
+        )
     ''')
 
     # 4. 연산(전처리, 가공, 분석(요구사항에 맞게)처리한 형태) 및 전송(kds(OUTUT)  전송)
     t_env.execute_sql('''
-    ''')
+        INSERT INTO stock_output
+        SELECT
+            ticker,
+            AVG(price) as avg_price,
+            TUMBLE_END(event_time, INTERVAL '10' SECOND)  as avg_time
+        from
+            stock_input
+        GROUP BY TUMBLE_END(event_time, INTERVAL '10' SECOND), ticker
+                      
+    ''').wait() # 쿼리 처리가 완료될때까지 기다린다!!
     pass
 
 # 단독형 앱 => 엔트리 포인트 표기 필요!!
