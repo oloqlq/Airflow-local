@@ -40,7 +40,7 @@ print( kinesis )
 def gen_stock_data():
     ticker = ['NVDA', 'GOOGL', 'AAPL', 'TSLA', 'AMZN', 'MSFT']
     return {
-        "event_time" : datetime.now().isoformat(),
+        "event_time" : datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3],
         "ticker" : random.choice(ticker),
         "price" : round( random.uniform(100,1000), 2),
         "volume" : random.randint(1, 100),
