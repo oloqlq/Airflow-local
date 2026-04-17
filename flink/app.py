@@ -44,8 +44,8 @@ def main():
             ticker STRING,
             price DOUBLE,
             event_time TIMESTAMP(3),
-            WATERMARK FOR event_time AS event_time - INTERVAL '5' SECOND
-        ) with (
+            WATERMARK FOR event_time AS event_time - INTERVAL '1' SECOND
+        ) WITH (
             "connector" = "kinesis",
             "stream"    = "de-ai-14-an1-kds-stock-input",
             "aws.region"= "ap-northeast-1",
