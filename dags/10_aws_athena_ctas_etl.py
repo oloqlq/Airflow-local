@@ -57,7 +57,7 @@ with DAG(
     # 임시로 사용한 테이블 삭제
     task2 = AthenaOperator(
         task_id         = 'drop_table',
-        query           = f'drop table if exists {ATHENA_DB_NAME}.{TARGET_TABLE}',
+        query           = f'drop table if exists {TARGET_TABLE}',
         database        = ATHENA_DB_NAME,
         output_location = S3_QUERY_LOG_LOC,
         aws_conn_id     = 'aws_default'
@@ -66,7 +66,7 @@ with DAG(
     # 90점 이상 학생만 추출 -> PARQUET 포맷 변환 -> GZIP 압축 -> S3_TARGET_LOG 저장
     # TARGET TABLE이 해당 소스를 참조하여 Athena를 통해 쿼리를 수행, 결과를 출력.
     query = f'''
-        CREATE TABLE {ATHENA_DB_NAME}.{TARGET_TABLE}
+        CREATE TABLE {TARGET_TABLE}
         WITH (
             format = 'PARQUET'
             parquet_compression = 'GZIP'
@@ -77,6 +77,7 @@ with DAG(
         FROM {SRC_TABLE}
         WHERE score >= 90
         ORDER BY score DESC
+    
     '''
 
     task3 = AthenaOperator(
