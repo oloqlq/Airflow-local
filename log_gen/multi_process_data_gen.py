@@ -110,7 +110,7 @@ if __name__ == '__main__':
     store_id    = f"store-{str(i+1).zfill(2)}"
     p = multiprocessing.Process(target=run_producer, args=(i, store_id))
     processes.append(p)
-    p.start
+    p.start()
   
   try:
     for p in processes:
