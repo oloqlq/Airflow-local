@@ -36,11 +36,11 @@ with DAG(
     ctas_silver_task = AthenaOperator(
         task_id         = 'ctas_silver',
         query           = '''
-            create table if not exists {{ params_database_silver }}.{{ params.tbl_nm }};
+            create table if not exists {{ params_database_silver }}.{{ params.tbl_nm }}
             with (
                 format              = 'PARQUET',
                 parquet_compression = 'SNAPPY',
-                external_location   = {{ params.silver_path }}
+                external_location   = {{ params.silver_path }},
                 partitioned_by      = ARRAY['dt', 'hr']
                 
             ) as
@@ -55,14 +55,13 @@ with DAG(
                 data.store_id,
                 source_ip,
                 user_agent,
-                cast(year || '-' || 'month' || '-' || day as VARCHAR) as dt,
-                hour as hr,
+                cast(year || '-' || month || '-' || day as VARCHAR) as dt,
+                hour as hr
             from {{ params.DATABASE_BRONZE }}.raw_bronze_tbl
             where   year    = {{ execution_date.format('YYYY') }}
                 and month   = {{ execution_date.format('MM') }}
                 and day     = {{ execution_date.format('DD') }}
                 and hour    = {{ execution_date.format('HH') }}
-
         ''',
         database        = DATABASE_SILVER,
         params          = {
