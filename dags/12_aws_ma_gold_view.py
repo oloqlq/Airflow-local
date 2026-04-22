@@ -31,14 +31,13 @@ with DAG(
         query="""
             create or replace view {{ params.database_gold }}.{{ params.view_nm }} as 
             select 
-                store_id,
                 item_id,
                 sum(qty) as total_qty,
                 sum(total_price) as total_revenue,
                 count(distinct user_id) as unique_customer,
                 dt as sales_date
-            from {{ database_silver }}.{{ table_nm }}
-            where dt = '{{ ( execution_date - macros.timedelta(days=1) ).format('YYYY-MM-DD') }}'
+            from {{ params.database_silver }}.{{ params.table_nm }}
+            where dt = '2026-04-22'         --'{{ ( execution_date - macros.timedelta(days=1) ).format('YYYY-MM-DD') }}'
             group by dt, item_id;
         """,
         params={
