@@ -29,22 +29,17 @@ with DAG(
     create_gold_view = AthenaOperator(
         task_id='create_or_replace_gold_view',
         query="""
-            CREATE EXTERNAL TABLE IF NOT EXISTS {{ params.database_silver }}.{{ params.tbl_nm }} (
-                event_id string,
-                event_timestamp timestamp,
-                user_id string,
-                item_id string,
-                price int,
-                qty int,
-                total_price int,
-                store_id string,
-                source_ip string,
-                user_agent string
-            )
-            PARTITIONED BY (dt string, hr string)
-            STORED AS PARQUET
-            LOCATION '{{ params.silver_path }}'
-            TBLPROPERTIES ('parquet.compress'='SNAPPY');
+            create or replace view {{ params.database_gold }}.{{ params.view_nm }} as 
+            select 
+                store_id,
+                item_id,
+                sum(qty) as total_qty,
+                sum(total_price) as total_revenue,
+                count(distinct user_id) as unique_customer,
+                dt as sales_date
+            from {{ database_silver }}.{{ table_nm }}
+            where dt = '{{ ( execution_date - macros.timedelta(days=1) ).format('YYYY-MM-DD') }}'
+            group by dt, item_id;
         """,
         params={
             'database_gold'     : DATABASE_GOLD,
