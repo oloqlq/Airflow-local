@@ -17,12 +17,29 @@ from airflow.models import Variable
 # 2. 환경변수
 HOST = Variable.get("HOST")
 AUTH = (Variable.get("AUTH_NAME"), Variable.get("AUTH_PW"))
-print( HOST, AUTH)
+index_name  = 'factory-45-sensor-v1'
 
 
 # 4-1. 콜백 함수 : 결과 획득
 def _searching_proc(**kwargs):
-    pass
+    client = OpenSearch(
+        hosts               = [{"host":HOST, "port":443}],
+        http_auth           = AUTH,
+        http_compress       = True,
+        use_ssl             = True,
+        verify_certs        = True,
+        ssl_assert_hostname = False,
+        ssl_show_warn       = False
+    )
+
+    query = {
+        "size": 1000,
+        "query": {"range":{"timestamp":{"gte": "now-120m"}}}
+        # gte : greater then or equal (>=), now-10m : 현재로부터 10분 전  
+    }
+
+    response = client.search(index=index_name, body=query)
+    print('검색 결과', response)
 
 
 # 3. DAG 정의
@@ -47,4 +64,4 @@ with DAG(
     )
 
     # 5. 의존성
-    task1
+    #task1
