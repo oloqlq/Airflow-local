@@ -15,8 +15,8 @@ from airflow.models import Variable
 
 
 # 2. 환경변수
-HOST = Variable.get("")
-AUTH = (Variable.get(""), Variable.get(""))
+HOST = Variable.get("HOST")
+AUTH = (Variable.get("AUTH_NAME"), Variable.get("AUTH_PW"))
 print( HOST, AUTH)
 
 
