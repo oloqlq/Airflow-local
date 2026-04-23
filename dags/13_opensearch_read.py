@@ -51,10 +51,28 @@ def _searching_proc(**kwargs):
     else:
         print(len(hits))
 
-    # 4-5. 분석 : 요구사항 수행(평균, 최대 등 계산), 이상탐지
+    # 4-5. 분석 : 요구사항 수행, 이상탐지
+    # 요구사항 - 1.oven 별 평균 온도  2.최대 진동 계산
     data    = [ hit['_source'] for hit in hits ]
     df      = pd.DataFrame(data)
     print(df.head(1))
+
+    analysis = df.groupby('oven_id').agg({
+        "temperature"   : "mean",
+        "vibration"     : "max",
+        "status"        : "count"
+    }).rename(columns={
+        'status':'log_count',
+        'temperature':'temp_mean',
+        'vibration':'vib_max'
+    })
+    print( "최근 120분 간 oven별 평균 온도, 최대 진동, 발생 로그 수" )
+    print( analysis )
+
+    # 이상치 탐지 : 블리언 인덱싱
+    outlier = df[ df['temperature'] >= 230 ]
+    if len(outlier):
+        print('이상온도감지 건수', len(outlier))
 
 
 # 3. DAG 정의
