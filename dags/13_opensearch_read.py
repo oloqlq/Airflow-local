@@ -40,6 +40,15 @@ def _searching_proc(**kwargs):
 
     response = client.search(index=index_name, body=query)
     print('검색 결과', response)
+    hits = response['hits']['hits']
+
+    if not hits:
+        print('조회 결과 없음')
+        return
+    else:
+        print(len(hits))
+    pass
+    
 
 
 # 3. DAG 정의
