@@ -11,7 +11,7 @@ from airflow.providers.amazon.aws.operators.athena import AthenaOperator
 from opensearchpy import OpenSearch
 import pendulum # 시간대 간편 설정
 from airflow.models import Variable
-
+import pandas as pd
 
 
 # 2. 환경변수
@@ -32,23 +32,29 @@ def _searching_proc(**kwargs):
         ssl_show_warn       = False
     )
 
+    # 4-2. opensearch용 쿼리 
     query = {
         "size": 1000,
         "query": {"range":{"timestamp":{"gte": "now-120m"}}}
         # gte : greater then or equal (>=), now-10m : 현재로부터 10분 전  
     }
 
+    # 4-3. 검색 요청
     response = client.search(index=index_name, body=query)
     print('검색 결과', response)
     hits = response['hits']['hits']
 
+    # 4-4. 검색 결과 체크
     if not hits:
         print('조회 결과 없음')
         return
     else:
         print(len(hits))
-    pass
-    
+
+    # 4-5. 분석 : 요구사항 수행(평균, 최대 등 계산), 이상탐지
+    data    = [ hit['_source'] for hit in hits ]
+    df      = pd.DataFrame(data)
+    print(df.head(1))
 
 
 # 3. DAG 정의
