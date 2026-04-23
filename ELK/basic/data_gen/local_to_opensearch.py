@@ -42,7 +42,7 @@ while True:
         
         # json(반정형) 형태의 데이터 구성
         doc = {
-            'timestamp'     :datetime.now,
+            'timestamp'     :datetime.now(),
             'oven_id'       :oven_id,
             'temperature'   :round(temp, 2),
             'vibration'     :round(random.uniform(0, 0.15), 2),
@@ -51,7 +51,7 @@ while True:
 
         # 전송 : HTTP post
         response = client.index(
-            index   = ndex_name,
+            index   = index_name,
             body    = doc,
             refresh = True
         )
